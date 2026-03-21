@@ -1,0 +1,65 @@
+{
+  "rules": {
+    "gameState": {
+      "$roomId": {
+        // Meta is readable by all room participants (check happens client-side;
+        // for production, enhance rules to verify room membership via custom claims)
+        "meta": {
+          ".read": "auth != null",
+          ".write": false
+        },
+
+        "bigTwo": {
+          // Public game state readable by all authenticated players
+          "currentPile": { ".read": "auth != null", ".write": false },
+          "pileType":    { ".read": "auth != null", ".write": false },
+          "passCount":   { ".read": "auth != null", ".write": false },
+          "scores":      { ".read": "auth != null", ".write": false },
+          "roundNumber": { ".read": "auth != null", ".write": false },
+
+          // Private: each player can only read their own hand
+          "hands": {
+            "$uid": {
+              ".read": "auth != null && auth.uid == $uid",
+              ".write": false
+            }
+          }
+        },
+
+        "texasHoldem": {
+          // Public state
+          "communityCards":  { ".read": "auth != null", ".write": false },
+          "pot":             { ".read": "auth != null", ".write": false },
+          "sidePots":        { ".read": "auth != null", ".write": false },
+          "currentBet":      { ".read": "auth != null", ".write": false },
+          "bettingRound":    { ".read": "auth != null", ".write": false },
+          "playerStates":    { ".read": "auth != null", ".write": false },
+
+          // Private: each player can only read their own hole cards
+          "hands": {
+            "$uid": {
+              ".read": "auth != null && auth.uid == $uid",
+              ".write": false
+            }
+          },
+
+          // Deck: never readable by clients (Cloud Functions use Admin SDK)
+          "deck": {
+            ".read": false,
+            ".write": false
+          }
+        }
+      }
+    },
+
+    // Presence: players can read all, write only their own
+    "presence": {
+      "$roomId": {
+        "$uid": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid == $uid"
+        }
+      }
+    }
+  }
+}
